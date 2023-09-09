@@ -18,6 +18,8 @@ import java.security.Key;
 import java.util.*;
 import java.util.function.Function;
 
+import static com.example.todolist.dto.times.Time.ONE_DAY;
+
 /** The type Jwt Impl. */
 @Slf4j
 @Service
@@ -130,7 +132,7 @@ public class JwtUtilsImpl implements JwtUtils {
         .setSubject(subject)
         .setHeaderParam("roles", roles)
         .setIssuedAt(new Date(System.currentTimeMillis()))
-        .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
+        .setExpiration(new Date(System.currentTimeMillis() + 365 * ONE_DAY))
         .signWith(getKey())
         .compact();
   }

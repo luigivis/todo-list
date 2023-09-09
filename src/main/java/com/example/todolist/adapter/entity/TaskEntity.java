@@ -1,13 +1,12 @@
 package com.example.todolist.adapter.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.sql.Timestamp;
-import java.util.Date;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -24,8 +23,10 @@ public class TaskEntity {
     @Column(name = "task_uuid")
     private String taskUuid;
 
-    @Column(name = "us_id")
-    private long usId;
+    @JsonIgnore
+    @ManyToOne(targetEntity = UserEntity.class)
+    @JoinColumn(name = "us_id")
+    private UserEntity user;
 
     @Column(name = "name")
     private String name;
@@ -34,19 +35,19 @@ public class TaskEntity {
     private String description;
 
     @Column(name = "start_time")
-    private Timestamp startTime;
+    private Date startTime;
 
     @Column(name = "end_time")
-    private Timestamp endTime;
+    private Date endTime;
 
-    @Column(name = "currently")
+    @Column(name = "currently" ,columnDefinition = "VARCHAR(255)")
     private Object currently;
 
     @Column(name = "share")
-    private Byte share;
+    private Boolean share;
 
     @Column(name = "status")
-    private Object status;
+    private String status;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(

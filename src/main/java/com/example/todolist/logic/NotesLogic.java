@@ -15,5 +15,5 @@ public interface NotesLogic {
 
   GenericResponses<Object> createNotes(CreateNoteRequestDto dto, String token);
 
-  GenericResponses<Object> editNotes(UpdateNoteRequestDto dto, String token);
+  GenericResponses<Object> editNotes(UpdateNoteRequestDto dto, String noteUuid, String token);
 }

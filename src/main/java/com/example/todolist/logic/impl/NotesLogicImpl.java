@@ -1,7 +1,6 @@
 package com.example.todolist.logic.impl;
 
-import static com.example.todolist.dto.enums.StatusResponses.NOTE_IS_PRIVATE;
-import static com.example.todolist.dto.enums.StatusResponses.OK;
+import static com.example.todolist.dto.enums.StatusResponses.*;
 
 import com.example.todolist.adapter.entity.NotesEntity;
 import com.example.todolist.adapter.repository.NotesRepository;
@@ -55,16 +54,16 @@ public class NotesLogicImpl implements NotesLogic {
 
       var username = jwtUtils.extractUsername(token);
 
-      var noteDto = notesRepository.findByUsernameAndNoteUuid(username, noteUuid);
+      var noteDto = notesRepository.findByUsernameAndNoteUuidOrShare(username, noteUuid);
 
       if (ObjectUtils.isEmpty(noteDto)) {
-        genericResponse.setStatus(NOTE_IS_PRIVATE.get());
+        genericResponse.setStatus(ITEM_IS_PRIVATE.get());
         return genericResponse;
       }
 
       genericResponse.setStatus(OK.get());
 
-      if (encrypt) {
+      if (!encrypt) {
         noteDto.setNotes(this.encrypt.desencrypt(noteDto.getNotes()));
       }
 
@@ -78,12 +77,43 @@ public class NotesLogicImpl implements NotesLogic {
 
   @Override
   public GenericResponses<Object> deleteNotes(String noteUuid, String token) {
-    return null;
+    var genericResponse = new GenericResponses<>();
+    try {
+      var username = jwtUtils.extractUsername(token);
+      var noteDto = notesRepository.findByUsernameAndNoteUuid(username, noteUuid);
+
+      if (ObjectUtils.isEmpty(noteDto)) {
+        genericResponse.setStatus(NOT_FOUND.get());
+        return genericResponse;
+      }
+
+      notesRepository.deleteByNoteUuid(noteDto.getNoteUuid());
+      genericResponse.setStatus(OK.get());
+      return genericResponse;
+    } catch (Exception e) {
+      return exceptionControl.extractError(e);
+    }
   }
 
   @Override
   public GenericResponses<Object> shareNotes(String noteUuid, String token) {
-    return null;
+    var genericResponse = new GenericResponses<>();
+    try {
+      var username = jwtUtils.extractUsername(token);
+      var noteDto = notesRepository.findByUsernameAndNoteUuid(username, noteUuid);
+
+      if (ObjectUtils.isEmpty(noteDto)) {
+        genericResponse.setStatus(NOT_FOUND.get());
+        return genericResponse;
+      }
+      noteDto.setShare(!noteDto.getShare());
+      noteDto.setUpdatedAt(new Date());
+      notesRepository.save(noteDto);
+      genericResponse.setStatus(OK.get());
+      return genericResponse;
+    } catch (Exception e) {
+      return exceptionControl.extractError(e);
+    }
   }
 
   @Override
@@ -98,7 +128,7 @@ public class NotesLogicImpl implements NotesLogic {
               .name(dto.getTitle())
               .notes(encrypt.encrypt(dto.getContent()))
               .user(userDto)
-              .share((byte) 0)
+              .share(false)
               .createdAt(new Date())
               .build();
 
@@ -114,7 +144,36 @@ public class NotesLogicImpl implements NotesLogic {
   }
 
   @Override
-  public GenericResponses<Object> editNotes(UpdateNoteRequestDto dto, String token) {
-    return null;
+  public GenericResponses<Object> editNotes(
+      UpdateNoteRequestDto dto, String noteUuid, String token) {
+    var genericResponse = new GenericResponses<>();
+
+    try {
+      var username = jwtUtils.extractUsername(token);
+      var noteDto = notesRepository.findByUsernameAndNoteUuid(username, noteUuid);
+
+      if (ObjectUtils.isEmpty(noteDto)) {
+        genericResponse.setStatus(NOT_FOUND.get());
+        return genericResponse;
+      }
+
+      final var titleString =
+          ObjectUtils.isEmpty(dto.getTitle()) ? noteDto.getName() : dto.getTitle();
+      final var noteString =
+          ObjectUtils.isEmpty(dto.getContent()) ? noteDto.getNotes() : dto.getContent();
+      final var encryptedNote = encrypt.encrypt(noteString);
+
+      noteDto.setName(titleString);
+      noteDto.setNotes(encryptedNote);
+      noteDto.setUpdatedAt(new Date());
+      noteDto = notesRepository.save(noteDto);
+
+      noteDto.setNotes(noteString);
+      genericResponse.setStatus(OK.get());
+      genericResponse.setBody(noteDto);
+      return genericResponse;
+    } catch (Exception e) {
+      return exceptionControl.extractError(e);
+    }
   }
 }

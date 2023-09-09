@@ -2,6 +2,7 @@ package com.example.todolist.controller;
 
 import com.example.todolist.command.NotesCommand;
 import com.example.todolist.dto.request.notes.CreateNoteRequestDto;
+import com.example.todolist.dto.request.notes.UpdateNoteRequestDto;
 import com.example.todolist.dto.response.GenericResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,13 +34,19 @@ public class NotesController {
     return command.findNoteByUuid(uuid, encrypt, request);
   }
 
-  @PostMapping("/update")
-  ResponseEntity<GenericResponses<Object>> updateNote() {
-    return null;
+  @PutMapping("/update/{uuid}")
+  ResponseEntity<GenericResponses<Object>> updateNote(@PathVariable String uuid, @RequestBody UpdateNoteRequestDto dto) {
+    return command.updateNote(dto, uuid, request);
   }
 
-  @PostMapping("/delete")
-  ResponseEntity<GenericResponses<Object>> deleteNote() {
-    return null;
+
+  @PutMapping("/share/{uuid}")
+  ResponseEntity<GenericResponses<Object>> shareNote(@PathVariable String uuid) {
+    return command.shareNote(uuid, request);
+  }
+
+  @DeleteMapping("/delete/{uuid}")
+  ResponseEntity<GenericResponses<Object>> deleteNote(@PathVariable String uuid) {
+    return command.deleteNote(uuid, request);
   }
 }

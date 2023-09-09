@@ -2,7 +2,9 @@ package com.example.todolist.adapter.repository;
 
 import com.example.todolist.adapter.entity.NotesEntity;
 import com.example.todolist.dto.response.notes.ListNotesResponseDto;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -36,6 +38,33 @@ public interface NotesRepository extends JpaRepository<NotesEntity, Long> {
              OR (n.note_uuid = :note_uuid AND u.username = :username)
           """,
       nativeQuery = true)
-  NotesEntity findByUsernameAndNoteUuid(
+  NotesEntity findByUsernameAndNoteUuidOrShare(
       @Param("username") String username, @Param("note_uuid") String noteUuid);
+
+  @Query(value = """
+          SELECT n.note_id,
+                 n.note_uuid,
+                 n.us_id,
+                 n.name,
+                 n.notes,
+                 n.share,
+                 n.versioned,
+                 n.created_at,
+                 n.updated_at
+          FROM notes n
+                   JOIN user u ON u.us_id = n.us_id
+          WHERE n.note_uuid = :note_uuid AND u.username = :username
+          """, nativeQuery = true)
+  NotesEntity findByUsernameAndNoteUuid(
+          @Param("username") String username, @Param("note_uuid") String noteUuid);
+
+  @Transactional
+  @Modifying
+  @Query(value = """
+          DELETE n, nv
+          FROM notes AS n
+          INNER JOIN notes_version AS nv ON n.note_id = nv.note_id
+          WHERE n.note_uuid = ?
+          """, nativeQuery = true)
+  void deleteByNoteUuid(String noteUuid);
 }

@@ -1,14 +1,15 @@
 package com.example.todolist.command;
 
 import static com.example.todolist.dto.enums.HeaderCatalog.JWT;
-import static com.example.todolist.dto.enums.StatusResponses.NOTE_IS_PRIVATE;
-import static com.example.todolist.dto.enums.StatusResponses.TOKEN_NOT_VALID;
+import static com.example.todolist.dto.enums.StatusResponses.*;
 import static com.example.todolist.util.impl.DatePattern.MMMM_dd_yyyy;
 
 import com.example.todolist.dto.request.notes.CreateNoteRequestDto;
+import com.example.todolist.dto.request.notes.UpdateNoteRequestDto;
 import com.example.todolist.dto.response.GenericResponses;
 import com.example.todolist.logic.impl.NotesLogicImpl;
 import com.example.todolist.util.impl.DatePattern;
+import com.example.todolist.util.impl.EnsureDataQuality;
 import com.example.todolist.util.impl.ExceptionControl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.ObjectUtils;
@@ -56,11 +57,44 @@ public class NotesCommand {
   public ResponseEntity<?> findNoteByUuid(String uuid, boolean encrypt, HttpServletRequest request) {
     var genericResponse = new GenericResponses<>();
     if (StringUtils.isBlank(uuid)) {
-      genericResponse.setStatus(NOTE_IS_PRIVATE.get());
+      genericResponse.setStatus(ERROR_GETTING_NOTE.get());
       return genericResponse.getResponseHttp(genericResponse);
     }
 
     genericResponse = logic.findNotes(uuid, encrypt, request.getHeader(JWT.name()));
+    return genericResponse.getResponseHttp(genericResponse);
+  }
+
+  public ResponseEntity<GenericResponses<Object>> updateNote(UpdateNoteRequestDto dto, String uuid, HttpServletRequest request) {
+    var genericResponse = new GenericResponses<>();
+    if (StringUtils.isBlank(uuid)) {
+      genericResponse.setStatus(ERROR_GETTING_NOTE.get());
+      return genericResponse.getResponseHttp(genericResponse);
+    }
+
+    genericResponse = logic.editNotes(dto, uuid, request.getHeader(JWT.name()));
+    return genericResponse.getResponseHttp(genericResponse);
+  }
+
+  public ResponseEntity<GenericResponses<Object>> deleteNote(String uuid, HttpServletRequest request) {
+    var genericResponse = new GenericResponses<>();
+    if (StringUtils.isBlank(uuid)) {
+      genericResponse.setStatus(ERROR_GETTING_NOTE.get());
+      return genericResponse.getResponseHttp(genericResponse);
+    }
+
+    genericResponse = logic.deleteNotes(uuid, request.getHeader(JWT.name()));
+    return genericResponse.getResponseHttp(genericResponse);
+  }
+
+  public ResponseEntity<GenericResponses<Object>> shareNote(String uuid, HttpServletRequest request) {
+    var genericResponse = new GenericResponses<>();
+    if (StringUtils.isBlank(uuid)) {
+      genericResponse.setStatus(ERROR_GETTING_NOTE.get());
+      return genericResponse.getResponseHttp(genericResponse);
+    }
+
+    genericResponse = logic.shareNotes(uuid, request.getHeader(JWT.name()));
     return genericResponse.getResponseHttp(genericResponse);
   }
 }

@@ -36,7 +36,7 @@ public class NotesEntity {
     private String notes;
 
     @Column(name = "share")
-    private Byte share;
+    private Boolean share;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(
